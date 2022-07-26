@@ -9,32 +9,49 @@ public class AILocomotion : MonoBehaviour
     Animator animator;
 
     public Transform playerTransform;
+    private bool isClose; // player within maxRadius
 
     public float maxTime = 1.0f;
     public float maxDistance = 1.0f;
     private float timer = 0.0f;
+
+    [Header("Attack")]
+    public float maxRadius;
+    public float minRadius;
 
     // Start is called before the first frame update
     void Start()
     {
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
+
+        isClose = false;
     }
 
     // Update is called once per frame
     void Update()
     {
-        // avoid recalculating destination every frame
+        // timer to avoid recalculating destination every frame
         timer -= Time.deltaTime;
         if (timer < 0.0f)
         {
-            float sqDistance = (playerTransform.position - agent.destination).sqrMagnitude;
-            if (sqDistance > maxDistance * maxDistance)
+            Vector3 playerToAgent = transform.position - playerTransform.position;
+
+            if (playerToAgent.sqrMagnitude < maxRadius * maxRadius)
+                isClose = true;
+            else
+                isClose = false;
+
+            Vector3 destination = playerTransform.position + playerToAgent.normalized * maxRadius;
+            float sqDistance = (transform.position - destination).sqrMagnitude;
+            if (!isClose && sqDistance > maxDistance * maxDistance)
             {
-                agent.destination = playerTransform.position;
+                agent.SetDestination(destination);
             }
+
             timer = maxTime;
         }
+
         animator.SetFloat("Speed", agent.velocity.magnitude);
     }
 }
