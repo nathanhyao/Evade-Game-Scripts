@@ -20,7 +20,7 @@ public class HeadRigWeight : MonoBehaviour
     public float distStartLook;
 
     public GameObject gts;
-    public Transform player;
+    public GameObject player;
 
     NavMeshAgent gtsAgent;
 
@@ -41,6 +41,7 @@ public class HeadRigWeight : MonoBehaviour
         if (timer < 0.0f)
         {
             lookControl();
+
             timer = maxTime;
         }
 
@@ -51,14 +52,13 @@ public class HeadRigWeight : MonoBehaviour
     {
         Vector3 gtsToPlayer = player.transform.position - gts.transform.position;
         float deg = Vector3.Angle(gts.transform.forward, gtsToPlayer);
-        float dist = gtsToPlayer.magnitude;
 
-        if (isLooking && (dist < distStopLook || deg > degStopLook))
+        if (isLooking && (gtsToPlayer.sqrMagnitude < Mathf.Pow(distStopLook, 2) || deg > degStopLook))
         {
             isLooking = false;
             weightTarget = 0.0f;
         }
-        else if (!isLooking && (dist >= distStartLook && deg <= degStartLook))
+        else if (!isLooking && (gtsToPlayer.sqrMagnitude >= Mathf.Pow(distStartLook, 2) && deg <= degStartLook))
         {
             isLooking = true;
             weightTarget = 1.0f;

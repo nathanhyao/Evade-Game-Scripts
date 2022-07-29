@@ -9,7 +9,10 @@ public class AILocomotion : MonoBehaviour
     Animator animator;
 
     public Transform playerTransform;
+
     Vector3 playerToAgent;
+    Vector3 agentToPlayer;
+    private float deg; // player degrees (angle) offset from agent FOV centerline
 
     public float maxTime = 0.5f;
     [Tooltip("Will not recalculate destination until farther than maxDistance.")]
@@ -17,10 +20,16 @@ public class AILocomotion : MonoBehaviour
     private float timer = 0.0f;
 
     [Header("Attack")]
+    [Tooltip("Align stoppingDistance with stomp attack range.")]
     public float stoppingDistance;
+    [Tooltip("Agent rotates to face player after agent finishes attacking.")]
+    public float rotationSpeed;
+    [Tooltip("Player must be within attackFOV degrees of agent line of sight for attack to trigger.")]
+    public float attackFOV;
     [Range(2.5f, 5)]
     public float size;
-    private bool stompAttackFinished;
+
+    private bool isAttacking;
 
     // Start is called before the first frame update
     void Start()
@@ -28,19 +37,29 @@ public class AILocomotion : MonoBehaviour
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
 
-        stompAttackFinished = false;
+        isAttacking = false;
     }
 
     // Update is called once per frame
     void Update()
     {
+        if (isAttacking) return;
+
+        playerToAgent = transform.position - playerTransform.position;
+        agentToPlayer = playerToAgent * -1;
+        deg = Vector3.Angle(transform.forward, agentToPlayer);
+
+        MovementControl();
+
+        AttackControl();
+
+        RotationControl();
+
         // timer to avoid recalculating destination every frame
         timer -= Time.deltaTime;
         if (timer < 0.0f)
         {
-            AgentControl();
-
-            AttackControl();
+            FindDestination();
 
             timer = maxTime;
         }
@@ -48,23 +67,24 @@ public class AILocomotion : MonoBehaviour
         animator.SetFloat("Speed", agent.velocity.magnitude);
     }
 
-    private void AgentControl()
+    private void FindDestination()
     {
-        playerToAgent = transform.position - playerTransform.position;
-        Vector3 destination = playerTransform.position + playerToAgent.normalized * stoppingDistance;
-
         float sqDistance = (transform.position - playerTransform.position).sqrMagnitude;
 
         if (!agent.isStopped && sqDistance > maxDistance * maxDistance)
         {
+            Vector3 destination = playerTransform.position + playerToAgent.normalized * stoppingDistance;
             agent.SetDestination(destination);
         }
+    }
 
+    private void MovementControl()
+    {
         if (playerToAgent.sqrMagnitude < Mathf.Pow(stoppingDistance + size, 2))
         {
             agent.isStopped = true;
         }
-        else if (stompAttackFinished)
+        else
         {
             agent.isStopped = false;
         }
@@ -73,18 +93,28 @@ public class AILocomotion : MonoBehaviour
     private void AttackControl()
     {
         if (playerToAgent.sqrMagnitude < Mathf.Pow(stoppingDistance + size, 2) &&
-        playerToAgent.sqrMagnitude > Mathf.Pow(stoppingDistance - size, 2))
+        playerToAgent.sqrMagnitude > Mathf.Pow(stoppingDistance - size, 2) && deg < attackFOV)
         {
-            animator.SetBool("atRadius", true);
+            animator.SetBool("canStompAttack", true);
         }
         else
         {
-            animator.SetBool("atRadius", false);
+            animator.SetBool("canStompAttack", false);
         }
     }
 
-    public void StompAttackStateToggle()
+    private void RotationControl()
     {
-        stompAttackFinished = !stompAttackFinished;
+        // Rotate agent to face player after agent finishes attacking
+        if (agent.isStopped && deg < attackFOV && animator.GetBool("canStompAttack"))
+        {
+            Quaternion toRotation = Quaternion.LookRotation(agentToPlayer, Vector3.up);
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, toRotation, rotationSpeed * Time.deltaTime);
+        }
+    }
+
+    public void isAttackingToggle()
+    {
+        isAttacking = !isAttacking;
     }
 }
