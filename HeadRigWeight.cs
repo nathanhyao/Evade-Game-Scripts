@@ -14,8 +14,8 @@ public class HeadRigWeight : MonoBehaviour
     private float maxTime = 1.0f;
 
     public float transitionTime;
-    [Range(0, 180)] public float degStopLook;
-    [Range(0, 180)] public float degStartLook;
+    [Range(0.0f, 180.0f)] public float degStopLook;
+    [Range(0.0f, 180.0f)] public float degStartLook;
     public float distStopLook;
     public float distStartLook;
 

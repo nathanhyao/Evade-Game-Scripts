@@ -14,22 +14,27 @@ public class AILocomotion : MonoBehaviour
     Vector3 agentToPlayer;
     private float deg; // player degrees (angle) offset from agent FOV centerline
 
+    [Header("Navigation")]
     public float maxTime = 0.5f;
-    [Tooltip("Will not recalculate destination until farther than maxDistance.")]
     public float maxDistance = 1.0f;
     private float timer = 0.0f;
 
     [Header("Attack")]
-    [Tooltip("Align stoppingDistance with stomp attack range.")]
-    public float stoppingDistance;
-    [Tooltip("Agent rotates to face player after agent finishes attacking.")]
+    public float heavyStompRange;
+    public float lightStompRange;
+    public float jumpRange;
     public float rotationSpeed;
-    [Tooltip("Player must be within attackFOV degrees of agent line of sight for attack to trigger.")]
-    public float attackFOV;
-    [Range(2.5f, 5)]
-    public float size;
+    public float jumpingSpeed;
 
-    private bool isAttacking;
+    [Range(0.0f, 180.0f)] public float attackFOV;
+    [Range(2.5f, 5.0f)] public float size;
+
+    private bool isStomping;
+    private bool isJumping;
+    private bool isAerial;
+
+    private string jumpParameter;
+    private bool isChosen;
 
     // Start is called before the first frame update
     void Start()
@@ -37,23 +42,33 @@ public class AILocomotion : MonoBehaviour
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
 
-        isAttacking = false;
+        isStomping = false;
+        isJumping = false;
+        isAerial = false;
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (isAttacking) return;
+        if (isStomping)
+        {
+            return;
+        }
+        else if (isAerial)
+        {
+            var step = jumpingSpeed * Time.deltaTime;
+            transform.position = Vector3.MoveTowards(transform.position, playerTransform.position, step);
+            return;
+        }
+        // isAerial -> isJumping (conditional)
+        else if (isJumping)
+        {
+            return;
+        }
 
         playerToAgent = transform.position - playerTransform.position;
         agentToPlayer = playerToAgent * -1;
         deg = Vector3.Angle(transform.forward, agentToPlayer);
-
-        MovementControl();
-
-        AttackControl();
-
-        RotationControl();
 
         // timer to avoid recalculating destination every frame
         timer -= Time.deltaTime;
@@ -65,6 +80,13 @@ public class AILocomotion : MonoBehaviour
         }
 
         animator.SetFloat("Speed", agent.velocity.magnitude);
+
+        MovementControl();
+
+        AttackControl();
+
+        RotationControl();
+
     }
 
     private void FindDestination()
@@ -73,15 +95,16 @@ public class AILocomotion : MonoBehaviour
 
         if (!agent.isStopped && sqDistance > maxDistance * maxDistance)
         {
-            Vector3 destination = playerTransform.position + playerToAgent.normalized * stoppingDistance;
-            agent.SetDestination(destination);
+            // Vector3 destination = playerTransform.position + playerToAgent.normalized * heavyStompRange;
+            agent.SetDestination(playerTransform.position);
         }
     }
 
     private void MovementControl()
     {
-        if (playerToAgent.sqrMagnitude < Mathf.Pow(stoppingDistance + size, 2))
+        if (inHeavyStompRange() || inLightStompRange() || inJumpRange())
         {
+            // agent.ResetPath(); // helps prevent offset overshoot with agent.autoBreaking true
             agent.isStopped = true;
         }
         else
@@ -92,29 +115,84 @@ public class AILocomotion : MonoBehaviour
 
     private void AttackControl()
     {
-        if (playerToAgent.sqrMagnitude < Mathf.Pow(stoppingDistance + size, 2) &&
-        playerToAgent.sqrMagnitude > Mathf.Pow(stoppingDistance - size, 2) && deg < attackFOV)
+        // Attack - Heavy Stomp (Long Range)
+        if (inHeavyStompRange())
         {
-            animator.SetBool("canStompAttack", true);
+            animator.SetBool("canHeavyStomp", true);
+            return;
         }
         else
         {
-            animator.SetBool("canStompAttack", false);
+            animator.SetBool("canHeavyStomp", false);
+        }
+
+        // Attack - Light Stomp (Short Range)
+        if (inLightStompRange())
+        {
+            animator.SetBool("canLightStomp", true);
+            return;
+        }
+        else
+        {
+            animator.SetBool("canLightStomp", false);
+        }
+
+        // Attack - Jump at Player
+        if (!isChosen && inJumpRange())
+        {
+            jumpParameter = Random.value > 0.5f ? "doSquatJump" : "doSkipJump";
+            animator.SetBool(jumpParameter, true);
+            isChosen = true;
         }
     }
 
     private void RotationControl()
     {
-        // Rotate agent to face player after agent finishes attacking
-        if (agent.isStopped && deg < attackFOV && animator.GetBool("canStompAttack"))
+        // Rotate agent to face player after agent finishes a stomp attack
+        if (agent.isStopped && deg < attackFOV && (animator.GetBool("canHeavyStomp") || animator.GetBool("canLightStomp")))
         {
             Quaternion toRotation = Quaternion.LookRotation(agentToPlayer, Vector3.up);
             transform.rotation = Quaternion.RotateTowards(transform.rotation, toRotation, rotationSpeed * Time.deltaTime);
         }
     }
 
-    public void isAttackingToggle()
+    private bool inHeavyStompRange()
     {
-        isAttacking = !isAttacking;
+        return deg < attackFOV
+            && playerToAgent.sqrMagnitude < Mathf.Pow(heavyStompRange + size, 2)
+            && playerToAgent.sqrMagnitude > Mathf.Pow(heavyStompRange - size, 2);
+    }
+
+    private bool inLightStompRange()
+    {
+        return deg < attackFOV
+            && playerToAgent.sqrMagnitude < Mathf.Pow(lightStompRange + size, 2)
+            && playerToAgent.sqrMagnitude > Mathf.Pow(lightStompRange - size, 2);
+    }
+
+    private bool inJumpRange()
+    {
+        return playerToAgent.sqrMagnitude < Mathf.Pow(jumpRange + size, 2);
+    }
+
+    public void isStompingToggle()
+    {
+        isStomping = !isStomping;
+    }
+
+    public void isJumpingToggle()
+    {
+        isJumping = !isJumping;
+    }
+
+    public void isAerialToggle()
+    {
+        isAerial = !isAerial;
+    }
+
+    public void resetJump()
+    {
+        animator.SetBool(jumpParameter, false);
+        isChosen = false;
     }
 }
