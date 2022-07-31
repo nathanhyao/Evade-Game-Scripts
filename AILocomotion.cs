@@ -19,22 +19,20 @@ public class AILocomotion : MonoBehaviour
     public float maxDistance = 1.0f;
     private float timer = 0.0f;
 
-    [Header("Attack")]
+    [Header("Attacking")]
     public float heavyStompRange;
     public float lightStompRange;
     public float jumpRange;
-    public float rotationSpeed;
     public float jumpingSpeed;
+    public float turningSpeed;
 
-    [Range(0.0f, 180.0f)] public float attackFOV;
-    [Range(2.5f, 5.0f)] public float size;
+    [Range(0.0f, 45.0f)] public float attackFOV;
+    [Range(2.5f, 5.0f)] public float rangeError;
 
     private bool isStomping;
     private bool isJumping;
     private bool isAerial;
-
-    private string jumpParameter;
-    private bool isChosen;
+    private bool isTurning;
 
     // Start is called before the first frame update
     void Start()
@@ -50,6 +48,10 @@ public class AILocomotion : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        // Debug.Log("isStomping" + isStomping);
+        // Debug.Log("isAerial" + isAerial);
+        // Debug.Log("isJumping" + isJumping);
+
         if (isStomping)
         {
             return;
@@ -104,7 +106,7 @@ public class AILocomotion : MonoBehaviour
     {
         if (inHeavyStompRange() || inLightStompRange() || inJumpRange())
         {
-            // agent.ResetPath(); // helps prevent offset overshoot with agent.autoBreaking true
+            agent.ResetPath(); // helps prevent offset overshoot with agent.autoBreaking true
             agent.isStopped = true;
         }
         else
@@ -119,80 +121,74 @@ public class AILocomotion : MonoBehaviour
         if (inHeavyStompRange())
         {
             animator.SetBool("canHeavyStomp", true);
+            isStomping = true;
             return;
-        }
-        else
-        {
-            animator.SetBool("canHeavyStomp", false);
         }
 
         // Attack - Light Stomp (Short Range)
         if (inLightStompRange())
         {
             animator.SetBool("canLightStomp", true);
+            isStomping = true;
             return;
-        }
-        else
-        {
-            animator.SetBool("canLightStomp", false);
         }
 
         // Attack - Jump at Player
-        if (!isChosen && inJumpRange())
+        if (inJumpRange())
         {
-            jumpParameter = Random.value > 0.5f ? "doSquatJump" : "doSkipJump";
-            animator.SetBool(jumpParameter, true);
-            isChosen = true;
+            animator.SetBool("canJump", true);
+            isJumping = true;
         }
     }
 
     private void RotationControl()
     {
-        // Rotate agent to face player after agent finishes a stomp attack
+        // Turn agent to face player if player still within attackFOV and stomp attack finishes
         if (agent.isStopped && deg < attackFOV && (animator.GetBool("canHeavyStomp") || animator.GetBool("canLightStomp")))
         {
             Quaternion toRotation = Quaternion.LookRotation(agentToPlayer, Vector3.up);
-            transform.rotation = Quaternion.RotateTowards(transform.rotation, toRotation, rotationSpeed * Time.deltaTime);
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, toRotation, turningSpeed * Time.deltaTime);
         }
+
+        // todo: Play turn animation if player >= 90 degrees offset from line of agent line of sight
     }
 
     private bool inHeavyStompRange()
     {
         return deg < attackFOV
-            && playerToAgent.sqrMagnitude < Mathf.Pow(heavyStompRange + size, 2)
-            && playerToAgent.sqrMagnitude > Mathf.Pow(heavyStompRange - size, 2);
+            && playerToAgent.sqrMagnitude < Mathf.Pow(heavyStompRange + rangeError, 2)
+            && playerToAgent.sqrMagnitude > Mathf.Pow(heavyStompRange - rangeError, 2);
     }
 
     private bool inLightStompRange()
     {
         return deg < attackFOV
-            && playerToAgent.sqrMagnitude < Mathf.Pow(lightStompRange + size, 2)
-            && playerToAgent.sqrMagnitude > Mathf.Pow(lightStompRange - size, 2);
+            && playerToAgent.sqrMagnitude < Mathf.Pow(lightStompRange + rangeError, 2)
+            && playerToAgent.sqrMagnitude > Mathf.Pow(lightStompRange - rangeError, 2);
     }
 
     private bool inJumpRange()
     {
-        return playerToAgent.sqrMagnitude < Mathf.Pow(jumpRange + size, 2);
+        return playerToAgent.sqrMagnitude < Mathf.Pow(jumpRange + rangeError, 2);
     }
 
-    public void isStompingToggle()
-    {
-        isStomping = !isStomping;
-    }
-
-    public void isJumpingToggle()
-    {
-        isJumping = !isJumping;
-    }
+    // animation events
 
     public void isAerialToggle()
     {
         isAerial = !isAerial;
     }
 
+    public void resetStomp()
+    {
+        isStomping = false;
+        animator.SetBool("canHeavyStomp", false);
+        animator.SetBool("canLightStomp", false);
+    }
+
     public void resetJump()
     {
-        animator.SetBool(jumpParameter, false);
-        isChosen = false;
+        animator.SetBool("canJump", false);
+        isJumping = false;
     }
 }
