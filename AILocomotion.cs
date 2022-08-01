@@ -10,13 +10,15 @@ public class AILocomotion : MonoBehaviour
 
     public Transform playerTransform;
 
-    Vector3 playerToAgent;
-    Vector3 agentToPlayer;
+    internal Vector3 playerToAgent;
+    internal Vector3 agentToPlayer;
+
     private float deg; // player degrees (angle) offset from agent FOV centerline
 
     [Header("Navigation")]
-    public float maxTime = 0.5f;
     public float maxDistance = 1.0f;
+
+    [Range(0.0f, 1.0f)] public float maxTime = 0.5f;
     private float timer = 0.0f;
 
     [Header("Attacking")]
@@ -43,23 +45,25 @@ public class AILocomotion : MonoBehaviour
         isStomping = false;
         isJumping = false;
         isAerial = false;
+        isTurning = false;
     }
 
     // Update is called once per frame
     void Update()
     {
-        // Debug.Log("isStomping" + isStomping);
-        // Debug.Log("isAerial" + isAerial);
-        // Debug.Log("isJumping" + isJumping);
+        Debug.Log("isStomping " + isStomping);
+        Debug.Log("isJumping " + isJumping);
+        Debug.Log("isAerial " + isAerial);
+        Debug.Log("isTurning " + isTurning);
 
-        if (isStomping)
+        if (isStomping || isTurning)
         {
+            RotationControl();
             return;
         }
         else if (isAerial)
         {
-            var step = jumpingSpeed * Time.deltaTime;
-            transform.position = Vector3.MoveTowards(transform.position, playerTransform.position, step);
+            JumpTowards();
             return;
         }
         // isAerial -> isJumping (conditional)
@@ -68,11 +72,9 @@ public class AILocomotion : MonoBehaviour
             return;
         }
 
-        playerToAgent = transform.position - playerTransform.position;
-        agentToPlayer = playerToAgent * -1;
-        deg = Vector3.Angle(transform.forward, agentToPlayer);
+        FindRelativePosition();
 
-        // timer to avoid recalculating destination every frame
+        // timer avoids recalculating destination every frame
         timer -= Time.deltaTime;
         if (timer < 0.0f)
         {
@@ -81,14 +83,18 @@ public class AILocomotion : MonoBehaviour
             timer = maxTime;
         }
 
-        animator.SetFloat("Speed", agent.velocity.magnitude);
-
         MovementControl();
-
         AttackControl();
-
+        TurnLeftOrRight();
         RotationControl();
+    }
 
+    private void FindRelativePosition()
+    {
+        // Useful information to find relative positions of agent and player
+        playerToAgent = transform.position - playerTransform.position;
+        agentToPlayer = playerToAgent * -1;
+        deg = Vector3.Angle(transform.forward, agentToPlayer);
     }
 
     private void FindDestination()
@@ -104,9 +110,12 @@ public class AILocomotion : MonoBehaviour
 
     private void MovementControl()
     {
-        if (inHeavyStompRange() || inLightStompRange() || inJumpRange())
+        // Core animation parameter - Idle / Walking
+        animator.SetFloat("Speed", agent.velocity.magnitude);
+
+        if (inHeavyStompRange() || inLightStompRange() || inJumpRange() || inTurnRange())
         {
-            agent.ResetPath(); // helps prevent offset overshoot with agent.autoBreaking true
+            agent.ResetPath(); // prevent stopping distance overshoot while agent.autoBreaking true
             agent.isStopped = true;
         }
         else
@@ -120,37 +129,59 @@ public class AILocomotion : MonoBehaviour
         // Attack - Heavy Stomp (Long Range)
         if (inHeavyStompRange())
         {
-            animator.SetBool("canHeavyStomp", true);
             isStomping = true;
+            animator.SetBool("canHeavyStomp", true);
             return;
         }
 
         // Attack - Light Stomp (Short Range)
-        if (inLightStompRange())
+        else if (inLightStompRange())
         {
-            animator.SetBool("canLightStomp", true);
             isStomping = true;
+            animator.SetBool("canLightStomp", true);
             return;
         }
 
         // Attack - Jump at Player
-        if (inJumpRange())
+        else if (inJumpRange())
         {
-            animator.SetBool("canJump", true);
             isJumping = true;
+            animator.SetBool("canJump", true);
+        }
+    }
+
+    private void JumpTowards()
+    {
+        // Agent towards player in airtime
+        var step = jumpingSpeed * Time.deltaTime;
+        transform.position = Vector3.MoveTowards(transform.position, playerTransform.position, step);
+    }
+
+    private void TurnLeftOrRight()
+    {
+        // Play TURN animation if player > 90 degrees offset from line of agent line of sight
+        if (Vector3.Angle(agentToPlayer, (transform.right + transform.forward * -1)) < 45.0f)
+        {
+            isTurning = true;
+            animator.SetBool("canRightTurn", true);
+        }
+        else if (Vector3.Angle(agentToPlayer, (transform.right * -1 + transform.forward * -1)) < 45.0f)
+        {
+            isTurning = true;
+            animator.SetBool("canLeftTurn", true);
         }
     }
 
     private void RotationControl()
     {
-        // Turn agent to face player if player still within attackFOV and stomp attack finishes
-        if (agent.isStopped && deg < attackFOV && (animator.GetBool("canHeavyStomp") || animator.GetBool("canLightStomp")))
+        // Turn agent to face player after a stomp attack or agent is playing turning animation
+        if (inHeavyStompRange() || inLightStompRange() || isTurning)
         {
-            Quaternion toRotation = Quaternion.LookRotation(agentToPlayer, Vector3.up);
-            transform.rotation = Quaternion.RotateTowards(transform.rotation, toRotation, turningSpeed * Time.deltaTime);
-        }
+            var step = isTurning ? turningSpeed * Time.deltaTime * 2.0f : turningSpeed * Time.deltaTime;
 
-        // todo: Play turn animation if player >= 90 degrees offset from line of agent line of sight
+            Quaternion toRotation = Quaternion.LookRotation(agentToPlayer, Vector3.up);
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, toRotation, step);
+        }
     }
 
     private bool inHeavyStompRange()
@@ -172,7 +203,12 @@ public class AILocomotion : MonoBehaviour
         return playerToAgent.sqrMagnitude < Mathf.Pow(jumpRange + rangeError, 2);
     }
 
-    // animation events
+    private bool inTurnRange()
+    {
+        return Vector3.Angle(agentToPlayer, transform.forward * -1) < 90.0f;
+    }
+
+    // Animation Events
 
     public void isAerialToggle()
     {
@@ -188,7 +224,14 @@ public class AILocomotion : MonoBehaviour
 
     public void resetJump()
     {
-        animator.SetBool("canJump", false);
         isJumping = false;
+        animator.SetBool("canJump", false);
+    }
+
+    public void resetTurn()
+    {
+        isTurning = false;
+        animator.SetBool("canLeftTurn", false);
+        animator.SetBool("canRightTurn", false);
     }
 }
