@@ -42,7 +42,8 @@ public class PlayerMovement : MonoBehaviour
     float horizontalInput;
     float verticalInput;
 
-    Vector3 moveDirection;
+    // Referenced in AILocomotion script
+    internal Vector3 moveDirection;
 
     Rigidbody rb;
 

@@ -5,6 +5,8 @@ using EZCameraShake;
 
 public class CameraShakeController : MonoBehaviour
 {
+    AILocomotion aiScript;
+
     [Header("Camera Shake")]
     public float magnitude;
     public float roughness;
@@ -14,7 +16,6 @@ public class CameraShakeController : MonoBehaviour
     private float distMultiplier;
 
     [Header("Magnitude by Distance")]
-    public AILocomotion aiScript;
     public int maxDistance;
     private float maxTime = 0.5f;
     private float timer = 0.0f;
@@ -22,7 +23,7 @@ public class CameraShakeController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-
+        aiScript = GetComponent<AILocomotion>();
     }
 
     // Update is called once per frame
