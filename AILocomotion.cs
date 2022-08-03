@@ -5,12 +5,12 @@ using UnityEngine.AI;
 
 public class AILocomotion : MonoBehaviour
 {
-    NavMeshAgent agent;
-    Animator animator;
+    private NavMeshAgent agent;
+    private Animator animator;
 
     [Header("Player Ref")]
     public GameObject player;
-    PlayerMovement playerMovement;
+    private PlayerMovement playerMovement;
 
     internal Vector3 playerToAgent;
     internal Vector3 agentToPlayer;
@@ -50,11 +50,6 @@ public class AILocomotion : MonoBehaviour
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
         playerMovement = player.GetComponent<PlayerMovement>();
-
-        isStomping = false;
-        isJumping = false;
-        isAerial = false;
-        isTurning = false;
     }
 
     // Update is called once per frame
@@ -76,7 +71,7 @@ public class AILocomotion : MonoBehaviour
             return;
         }
 
-        rangeCorrection();
+        RangeCorrection();
         FindRelativePosition();
 
         // timer avoids recalculating destination every frame
@@ -94,7 +89,7 @@ public class AILocomotion : MonoBehaviour
         RotationControl();
     }
 
-    private void rangeCorrection()
+    private void RangeCorrection()
     {
         // If player is moving away, agent will attack more forward (path prediction)
         if (playerMovement.moveDirection == Vector3.zero)
