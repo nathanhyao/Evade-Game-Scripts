@@ -42,10 +42,10 @@ public class PlayerMovement : MonoBehaviour
     float horizontalInput;
     float verticalInput;
 
-    // Referenced in AILocomotion script
-    internal Vector3 moveDirection;
+    private Vector3 moveDirection;
 
-    Rigidbody rb;
+    // Referenced in AILocomotion script
+    internal Rigidbody rb;
 
     public MovementState state;
 

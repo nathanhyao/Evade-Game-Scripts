@@ -40,7 +40,7 @@ public class HeadRigWeight : MonoBehaviour
         timer -= Time.deltaTime;
         if (timer < 0.0f)
         {
-            lookControl();
+            LookControl();
 
             timer = maxTime;
         }
@@ -48,7 +48,7 @@ public class HeadRigWeight : MonoBehaviour
         rig.weight = Mathf.SmoothDamp(rig.weight, weightTarget, ref currentVelocity, transitionTime);
     }
 
-    private void lookControl()
+    private void LookControl()
     {
         Vector3 gtsToPlayer = player.transform.position - gts.transform.position;
         float deg = Vector3.Angle(gts.transform.forward, gtsToPlayer);
