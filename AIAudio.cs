@@ -7,18 +7,18 @@ public class AIAudio : MonoBehaviour
     private AudioSource source;
 
     [Header("Movement Audio")]
-    public AudioClip walkSound;
-    public AudioClip attackSound;
-    public AudioClip stompWhooshSound;
-    public AudioClip jumpWhooshSound;
+    [SerializeField] private AudioClip walkSound;
+    [SerializeField] private AudioClip attackSound;
+    [SerializeField] private AudioClip stompWhooshSound;
+    [SerializeField] private AudioClip jumpWhooshSound;
 
     [Header("Randomizer")]
-    [Range(0.0f, 0.5f)] public float volumeChangeMultiplier = 0.2f;
-    [Range(0.0f, 0.5f)] public float pitchChangeMultiplier = 0.2f;
+    [SerializeField, Range(0.0f, 0.5f)] private float volumeChangeMultiplier = 0.2f;
+    [SerializeField, Range(0.0f, 0.5f)] private float pitchChangeMultiplier = 0.2f;
 
     [Header("Speech Audio")]
-    public AudioClip[] encounterSpeech;
-    public AudioClip[] killSpeech;
+    [SerializeField] private AudioClip[] encounterSpeech;
+    [SerializeField] private AudioClip[] killSpeech;
 
     private float volume;
     private float pitch;

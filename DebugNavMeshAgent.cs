@@ -6,25 +6,29 @@ using UnityEditor;
 
 public class DebugNavMeshAgent : MonoBehaviour
 {
-    NavMeshAgent agent;
-    public Transform playerTransform;
+    private NavMeshAgent agent;
+
+    [SerializeField] private Transform playerTransform;
 
     // keep unchecked in Unity Inspector when game isn't running
     [Header("NavMeshAgent")]
-    public bool velocity;
-    public bool desiredVelocity;
-    public bool path;
+    [SerializeField] private bool velocity;
+    [SerializeField] private bool desiredVelocity;
+    [SerializeField] private bool path;
 
     [Header("Player")]
-    public bool pathDistance;
-    private Vector3 textOffset = new Vector3(0.0f, 2.5f, 0.0f);
+    [SerializeField] private bool pathDistance;
+    private Vector3 textOffset;
 
     // Start is called before the first frame update
     void Start()
     {
         agent = GetComponent<NavMeshAgent>();
+
         velocity = desiredVelocity = path = pathDistance = true;
+
         Handles.color = Color.black;
+        textOffset = new Vector3(0.0f, 2.5f, 0.0f);
     }
 
     private void OnDrawGizmos()

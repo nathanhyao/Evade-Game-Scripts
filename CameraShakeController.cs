@@ -5,20 +5,19 @@ using EZCameraShake;
 
 public class CameraShakeController : MonoBehaviour
 {
-    AILocomotion aiScript;
+    [SerializeField] private AILocomotion aiScript;
 
     [Header("Camera Shake")]
-    public float magnitude;
-    public float roughness;
-    public float fadeInTime;
-    public float fadeOutTime;
-
-    private float distMultiplier;
+    [SerializeField] private float magnitude;
+    [SerializeField] private float roughness;
+    [SerializeField] private float fadeInTime;
+    [SerializeField] private float fadeOutTime;
 
     [Header("Magnitude by Distance")]
-    public int maxDistance;
+    [SerializeField] private int maxDistance;
+    private float distanceMultiplier;
     private float maxTime = 0.5f;
-    private float timer = 0.0f;
+    private float distanceCheckTimer = 0.0f;
 
     // Start is called before the first frame update
     void Start()
@@ -29,16 +28,16 @@ public class CameraShakeController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        timer -= Time.deltaTime;
-        if (timer < 0.0f)
+        distanceCheckTimer -= Time.deltaTime;
+        if (distanceCheckTimer < 0.0f)
         {
             // distanceMultiplier exists between 0 (agent far from player) and 1 (close to player)
-            distMultiplier = (maxDistance - aiScript.playerToAgent.magnitude) / maxDistance;
+            distanceMultiplier = (maxDistance - aiScript.playerToAgent.magnitude) / maxDistance;
 
-            if (distMultiplier < 0.0f)
-                distMultiplier = 0.0f;
+            if (distanceMultiplier < 0.0f)
+                distanceMultiplier = 0.0f;
 
-            timer = maxTime;
+            distanceCheckTimer = maxTime;
         }
     }
 
@@ -46,11 +45,11 @@ public class CameraShakeController : MonoBehaviour
 
     public void ShakeCamLight()
     {
-        CameraShaker.Instance.ShakeOnce(magnitude * distMultiplier, roughness, fadeInTime, fadeOutTime);
+        CameraShaker.Instance.ShakeOnce(magnitude * distanceMultiplier, roughness, fadeInTime, fadeOutTime);
     }
 
     public void ShakeCamHeavy()
     {
-        CameraShaker.Instance.ShakeOnce(4.5f * magnitude * distMultiplier, roughness, fadeInTime, fadeOutTime);
+        CameraShaker.Instance.ShakeOnce(5.5f * magnitude * distanceMultiplier, roughness, fadeInTime, fadeOutTime);
     }
 }

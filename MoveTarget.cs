@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class MoveTarget : MonoBehaviour
 {
-    public Transform playerTransform;
+    [SerializeField] private Transform playerTransform;
 
     // Update is called once per frame
     void Update()

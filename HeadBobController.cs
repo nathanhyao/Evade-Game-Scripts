@@ -4,25 +4,24 @@ using UnityEngine;
 
 public class HeadBobController : MonoBehaviour
 {
-    private bool enable = true;
+    [SerializeField] private bool enable = true;
+    [SerializeField] private float toggleSpeed = 3.0f;
 
-    [Range(0, 0.1f)] public float amplitude = 0.015f;
-    [Range(0, 30)] public float frequency = 10.0f;
+    [SerializeField, Range(0, 0.1f)] public float amplitude = 0.015f;
+    [SerializeField, Range(0, 30)] public float frequency = 10.0f;
 
-    public Transform cam;
-    public Transform camHolder;
+    [SerializeField] private Transform cam = null;
+    [SerializeField] private Transform camHolder = null;
 
-    private float toggleSpeed = 3.0f;
+    [SerializeField] private PlayerMovement playerMovementScript = null;
+
     private Vector3 startPos;
     private Rigidbody rb;
-
-    PlayerMovement playerMovement;
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
         startPos = cam.localPosition;
-        playerMovement = GetComponent<PlayerMovement>();
     }
 
     // Start is called before the first frame update
@@ -58,8 +57,7 @@ public class HeadBobController : MonoBehaviour
     {
         float speed = new Vector3(rb.velocity.x, 0, rb.velocity.z).magnitude;
 
-        if (speed < toggleSpeed) return;
-        if (!playerMovement.grounded) return;
+        if (speed < toggleSpeed || !playerMovementScript.grounded) return;
 
         PlayMotion(FootStepMotion());
     }

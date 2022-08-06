@@ -13,24 +13,23 @@ public class HeadRigWeight : MonoBehaviour
     private float timer = 0.0f;
     private float maxTime = 1.0f;
 
-    public float transitionTime;
-    [Range(0.0f, 180.0f)] public float degStopLook;
-    [Range(0.0f, 180.0f)] public float degStartLook;
-    public float distStopLook;
-    public float distStartLook;
+    [SerializeField] private float transitionTime;
+    [SerializeField, Range(0.0f, 180.0f)] public float degStopLook;
+    [SerializeField, Range(0.0f, 180.0f)] public float degStartLook;
+    [SerializeField] private float distStopLook;
+    [SerializeField] public float distStartLook;
 
-    public GameObject gts;
-    public GameObject player;
+    [SerializeField] private GameObject gts;
+    [SerializeField] private GameObject player;
 
-    NavMeshAgent gtsAgent;
-
-    Rig rig;
+    private NavMeshAgent gtsAgent;
+    private Rig rig;
 
     // Start is called before the first frame update
     void Start()
     {
-        rig = GetComponent<Rig>();
         gtsAgent = gts.GetComponent<NavMeshAgent>();
+        rig = GetComponent<Rig>();
         currentVelocity = 0;
     }
 

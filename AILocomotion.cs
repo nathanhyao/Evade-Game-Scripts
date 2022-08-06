@@ -5,39 +5,36 @@ using UnityEngine.AI;
 
 public class AILocomotion : MonoBehaviour
 {
-    private NavMeshAgent agent;
-    private Animator animator;
+    private NavMeshAgent agent = null;
+    private Animator animator = null;
 
-    [Header("Player Ref")]
-    public GameObject player;
-
-    private PlayerMovement playerMovement;
+    [Header("Player Reference")]
+    [SerializeField] private GameObject player = null;
+    [SerializeField] private Rigidbody playerRb = null;
 
     internal Vector3 playerToAgent;
     internal Vector3 agentToPlayer;
-
-    // player degrees (angle) offset from agent FOV centerline
     private float deg;
 
     [Header("Navigation")]
-    [Range(0.0f, 300.0f)] public float maxDistance = 1.0f;
-    [Range(0.0f, 1.0f)] public float maxTime = 0.5f;
-    private float timer = 0.0f;
+    [SerializeField, Range(0.0f, 300.0f)] private float maxDistance = 1.0f;
+    [SerializeField, Range(0.0f, 1.0f)] private float maxNavigationTime = 0.5f;
+    private float navigationTimer = 0.0f;
 
     [Header("Attacking")]
-    public float heavyStompRange;
-    public float lightStompRange;
-    public float jumpRange;
+    [SerializeField] private float heavyStompRange;
+    [SerializeField] private float lightStompRange;
+    [SerializeField] private float jumpRange;
 
     [Header("Attacking Tweaks")]
-    [Range(0.0f, 10.0f)] public float rangeFix;
-    [Range(2.5f, 7.5f)] public float rangeError;
-    [Range(0.0f, 45.0f)] public float attackFOV;
+    [SerializeField, Range(0.0f, 10.0f)] private float rangeFix;
+    [SerializeField, Range(2.5f, 7.5f)] private float rangeError;
+    [SerializeField, Range(0.0f, 45.0f)] private float attackFOV;
 
     private float rangeFixMultiplier;
 
-    public float jumpSpeed;
-    public float turnSpeed;
+    [SerializeField] private float jumpSpeed;
+    [SerializeField] private float turnSpeed;
 
     private bool isStomping;
     private bool isJumping;
@@ -49,7 +46,6 @@ public class AILocomotion : MonoBehaviour
     {
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
-        playerMovement = player.GetComponent<PlayerMovement>();
     }
 
     // Update is called once per frame
@@ -75,12 +71,12 @@ public class AILocomotion : MonoBehaviour
         FindRelativePosition();
 
         // timer avoids recalculating destination every frame
-        timer -= Time.deltaTime;
-        if (timer < 0.0f)
+        navigationTimer -= Time.deltaTime;
+        if (navigationTimer < 0.0f)
         {
             FindDestination();
 
-            timer = maxTime;
+            navigationTimer = maxNavigationTime;
         }
 
         MobilityControl();
@@ -92,12 +88,12 @@ public class AILocomotion : MonoBehaviour
     private void RangeCorrection()
     {
         // If player is moving away, agent will attack more forward (path prediction)
-        if (playerMovement.rb.velocity == Vector3.zero)
+        if (playerRb.velocity == Vector3.zero)
         {
             rangeFixMultiplier = 0.0f;
             return;
         }
-        rangeFixMultiplier = (180.0f - Vector3.Angle(playerMovement.rb.velocity, transform.forward)) / 180.0f;
+        rangeFixMultiplier = (180.0f - Vector3.Angle(playerRb.velocity, transform.forward)) / 180.0f;
     }
 
     private void FindRelativePosition()
