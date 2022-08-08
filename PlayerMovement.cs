@@ -4,12 +4,20 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
+    [SerializeField] private Transform orientation;
+
+    private float horizontalInput;
+    private float verticalInput;
+
+    private Vector3 moveDirection;
+    private Rigidbody rb;
+    public MovementState state;
+
     [Header("Movement")]
-    private float moveSpeed;
     [SerializeField] private float walkSpeed;
     [SerializeField] private float sprintSpeed;
-
     [SerializeField] private float groundDrag;
+    private float moveSpeed;
 
     [Header("Jumping")]
     [SerializeField] private float jumpForce;
@@ -30,23 +38,12 @@ public class PlayerMovement : MonoBehaviour
     [Header("Ground Check")]
     [SerializeField] private float playerHeight;
     [SerializeField] private LayerMask whatIsGround;
-    internal bool grounded; // Ref: HeadBobController script(s)
+    internal bool grounded; // Ref: HeadBobController, PlayerAudio script(s)
 
     [Header("Slope Handling")]
     [SerializeField] private float maxSlopeAngle;
     private RaycastHit slopeHit;
     private bool exitingSlope;
-
-    [SerializeField] private Transform orientation;
-
-    private float horizontalInput;
-    private float verticalInput;
-
-    private Vector3 moveDirection;
-
-    internal Rigidbody rb; // Ref: AILocomotion script(s)
-
-    public MovementState state;
 
     public enum MovementState
     {

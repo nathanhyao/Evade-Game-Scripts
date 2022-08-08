@@ -5,7 +5,7 @@ using EZCameraShake;
 
 public class CameraShakeController : MonoBehaviour
 {
-    [SerializeField] private AILocomotion aiScript;
+    [SerializeField] private AILocomotion aiScript = null;
 
     [Header("Camera Shake")]
     [SerializeField] private float magnitude;

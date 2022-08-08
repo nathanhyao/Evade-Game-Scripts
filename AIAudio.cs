@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class AIAudio : MonoBehaviour
 {
-    private AudioSource source;
+    private AudioSource source = default;
 
     [Header("Movement Audio")]
     [SerializeField] private AudioClip walkSound;
