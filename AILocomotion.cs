@@ -67,8 +67,8 @@ public class AILocomotion : MonoBehaviour
             return;
         }
 
-        RangeCorrection();
         FindRelativePosition();
+        RangeCorrection();
 
         // timer avoids recalculating destination every frame
         navigationTimer -= Time.deltaTime;
