@@ -215,6 +215,13 @@ public class AILocomotion : MonoBehaviour
         return Vector3.Angle(agentToPlayer, transform.forward * -1) < 90.0f;
     }
 
+    // This function is called when the behaviour becomes disabled.
+    private void OnDisable()
+    {
+        // Finish with idle animation after player death
+        animator.SetFloat("Speed", 0.0f);
+    }
+
     // Animation Events
 
     public void IsAerialToggle()

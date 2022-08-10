@@ -4,8 +4,8 @@ using UnityEngine;
 
 public class PlayerCam : MonoBehaviour
 {
-    [SerializeField] private float sensX;
-    [SerializeField] private float sensY;
+    [SerializeField] internal float sensX; // Ref: PlayerCollision script(s)
+    [SerializeField] internal float sensY;
 
     [SerializeField] private Transform orientation;
 
@@ -29,7 +29,7 @@ public class PlayerCam : MonoBehaviour
         yRotation += mouseX;
 
         xRotation -= mouseY;
-        xRotation = Mathf.Clamp(xRotation, -89.9f, 89.9f);
+        xRotation = Mathf.Clamp(xRotation, -89.5f, 89.5f);
 
         // rotate cam and orientation
         transform.rotation = Quaternion.Euler(xRotation, yRotation, 0);

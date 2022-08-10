@@ -45,7 +45,7 @@ public class PlayerAudio : MonoBehaviour
 
     private void RandomizeSound()
     {
-        source.volume = Random.Range(volume - volumeChangeMultiplier, volume);
+        source.volume = Random.Range(volume - volumeChangeMultiplier, volume + volumeChangeMultiplier);
         source.pitch = Random.Range(pitch - pitchChangeMultiplier, pitch + pitchChangeMultiplier);
     }
 

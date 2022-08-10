@@ -36,20 +36,16 @@ public class AIAudio : MonoBehaviour
         source.PlayOneShot(encounterSpeech[Random.Range(0, encounterSpeech.Length)]);
     }
 
-    // Update is called once per frame
-    void Update()
+    public void PlayKillSpeech()
     {
         // play agent speech after player death
-        if (Input.GetKeyDown(KeyCode.K))
-        {
-            if (killSpeech.Length == 0) return;
-            source.PlayOneShot(killSpeech[Random.Range(0, killSpeech.Length)]);
-        }
+        if (killSpeech.Length == 0) return;
+        source.PlayOneShot(killSpeech[Random.Range(0, killSpeech.Length)]);
     }
 
     private void RandomizeSound()
     {
-        source.volume = Random.Range(volume - volumeChangeMultiplier, volume);
+        source.volume = Random.Range(volume - volumeChangeMultiplier, volume + volumeChangeMultiplier);
         source.pitch = Random.Range(pitch - pitchChangeMultiplier, pitch + pitchChangeMultiplier);
     }
 
