@@ -218,8 +218,21 @@ public class AILocomotion : MonoBehaviour
     // This function is called when the behaviour becomes disabled.
     private void OnDisable()
     {
-        // Finish with idle animation after player death
-        animator.SetFloat("Speed", 0.0f);
+        Time.timeScale = 0.7f;
+        StartCoroutine(ResetAnimation());
+    }
+
+    private IEnumerator ResetAnimation()
+    {
+        float timeElapsed = 0.0f;
+        float lerpDuration = 100.0f;
+
+        while (timeElapsed < lerpDuration)
+        {
+            animator.SetFloat("Speed", Mathf.Lerp(animator.GetFloat("Speed"), 0.0f, timeElapsed / lerpDuration));
+            timeElapsed += Time.deltaTime;
+            yield return null;
+        }
     }
 
     // Animation Events
