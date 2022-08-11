@@ -18,6 +18,7 @@ public class AIAudio : MonoBehaviour
 
     [Header("Speech Audio")]
     [SerializeField] private AudioClip[] encounterSpeech;
+    [SerializeField] private AudioClip[] attackSpeech;
     [SerializeField] private AudioClip[] killSpeech;
 
     private float volume;
@@ -61,6 +62,15 @@ public class AIAudio : MonoBehaviour
     {
         RandomizeSound();
         source.PlayOneShot(attackSound);
+    }
+
+    public void PlayAttackSpeech()
+    {
+        if (!PlayerCollision.isDead)
+        {
+            RandomizeSound();
+            source.PlayOneShot(attackSpeech[Random.Range(0, attackSpeech.Length)]);
+        }
     }
 
     public void PlayStompWhooshSound()

@@ -19,6 +19,9 @@ public class PlayerAudio : MonoBehaviour
                                     : pms.state == PlayerMovement.MovementState.sprinting ? baseStepSpeed * sprintStepMultiplier
                                     : baseStepSpeed;
 
+    [Header("Death")]
+    [SerializeField] private AudioClip[] deathSounds = default;
+
     [Header("Randomizer")]
     [SerializeField, Range(0.0f, 1.0f)] private float volumeChangeMultiplier = 0.5f;
     [SerializeField, Range(0.0f, 1.0f)] private float pitchChangeMultiplier = 0.5f;
@@ -31,7 +34,7 @@ public class PlayerAudio : MonoBehaviour
     {
         source = GetComponent<AudioSource>();
         playerRb = GetComponent<Rigidbody>();
-        pms = GetComponent<PlayerMovement>(); // Awake() ?
+        pms = GetComponent<PlayerMovement>();
 
         volume = source.volume;
         pitch = source.pitch;
@@ -60,5 +63,10 @@ public class PlayerAudio : MonoBehaviour
             source.PlayOneShot(stepSounds[Random.Range(0, stepSounds.Length)]);
             footstepTimer = GetCurrentOffset;
         }
+    }
+
+    public void PlayDeathSound()
+    {
+        source.PlayOneShot(deathSounds[Random.Range(0, deathSounds.Length)]);
     }
 }

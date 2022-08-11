@@ -225,14 +225,16 @@ public class AILocomotion : MonoBehaviour
     private IEnumerator ResetAnimation()
     {
         float timeElapsed = 0.0f;
-        float lerpDuration = 100.0f;
+        float lerpDuration = 1.5f;
+        float startValue = animator.GetFloat("Speed");
 
         while (timeElapsed < lerpDuration)
         {
-            animator.SetFloat("Speed", Mathf.Lerp(animator.GetFloat("Speed"), 0.0f, timeElapsed / lerpDuration));
+            animator.SetFloat("Speed", Mathf.Lerp(startValue, 0.0f, timeElapsed / lerpDuration));
             timeElapsed += Time.deltaTime;
             yield return null;
         }
+        animator.SetFloat("Speed", 0.0f);
     }
 
     // Animation Events

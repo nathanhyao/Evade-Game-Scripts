@@ -1,13 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class PlayerCollision : MonoBehaviour
 {
     [Header("Player Components")]
     [SerializeField] private PlayerMovement playerMovementScript = default;
     [SerializeField] private Rigidbody playerRb = default;
+    [SerializeField] private PlayerAudio playerAudioScript = default;
 
     [Header("Player Effects")]
     [SerializeField] private float flattenYScale = 0.1f;
@@ -21,13 +21,15 @@ public class PlayerCollision : MonoBehaviour
     private AIAudio aiAudioScript = default;
     private PlayerCam playerCamScript = default;
 
-    private bool isDead = false;
+    public static bool isDead = false;
 
     void Start()
     {
         aiLocomotionScript = enemy.GetComponent<AILocomotion>();
         aiAudioScript = enemy.GetComponent<AIAudio>();
         playerCamScript = camHolder.GetComponent<PlayerCam>();
+
+        isDead = false;
     }
 
     void OnTriggerEnter(Collider otherCollider)
@@ -38,9 +40,11 @@ public class PlayerCollision : MonoBehaviour
 
             damageOverlay.SetActive(true);
 
+            playerAudioScript.PlayDeathSound();
             aiAudioScript.Invoke("PlayKillSpeech", 1.5f);
 
             playerMovementScript.enabled = false;
+            playerAudioScript.enabled = false;
             aiLocomotionScript.enabled = false;
 
             transform.localScale = new Vector3(transform.localScale.x, flattenYScale, transform.localScale.z);
