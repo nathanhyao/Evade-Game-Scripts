@@ -8,6 +8,7 @@ public class PauseMenu : MonoBehaviour
     public static bool gameIsPaused = false;
 
     [SerializeField] private GameObject pauseMenuUI = default;
+    [SerializeField] private GameObject deathMenuUI = default;
     [SerializeField] private HeadBobController playerHeadBobScript = default;
 
     // Update is called once per frame
@@ -28,10 +29,16 @@ public class PauseMenu : MonoBehaviour
 
     public void ResumeGame()
     {
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        if (!PlayerCollision.isDead)
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
 
         playerHeadBobScript.enabled = true;
+
+        if (PlayerCollision.isDead)
+            deathMenuUI.SetActive(true);
 
         pauseMenuUI.SetActive(false);
         Time.timeScale = 1.0f;
@@ -45,15 +52,25 @@ public class PauseMenu : MonoBehaviour
 
         playerHeadBobScript.enabled = false;
 
+        if (PlayerCollision.isDead)
+            deathMenuUI.SetActive(false);
+
         pauseMenuUI.SetActive(true);
         Time.timeScale = 0.0f;
         gameIsPaused = true;
     }
 
+    public void RestartLevel()
+    {
+        Debug.Log("Restarting level...");
+        Time.timeScale = 1.0f;
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+
     public void LoadMainMenu()
     {
         Debug.Log("Loading menu...");
-        Time.timeScale = 1.0f;
+        // Time.timeScale = 1.0f;
         // SceneManager.LoadScene();
     }
 

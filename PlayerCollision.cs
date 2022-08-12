@@ -40,6 +40,9 @@ public class PlayerCollision : MonoBehaviour
 
             damageOverlay.SetActive(true);
 
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+
             playerAudioScript.PlayDeathSound();
             aiAudioScript.Invoke("PlayKillSpeech", 1.5f);
 
