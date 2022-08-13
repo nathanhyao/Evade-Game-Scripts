@@ -21,6 +21,7 @@ public class PlayerAudio : MonoBehaviour
 
     [Header("Death")]
     [SerializeField] private AudioClip[] deathSounds = default;
+    [SerializeField, Range(0.0f, 1.0f)] private float deathSoundVolume = 0.5f;
 
     [Header("Randomizer")]
     [SerializeField, Range(0.0f, 1.0f)] private float volumeChangeMultiplier = 0.5f;
@@ -67,6 +68,7 @@ public class PlayerAudio : MonoBehaviour
 
     public void PlayDeathSound()
     {
+        source.volume = deathSoundVolume;
         source.PlayOneShot(deathSounds[Random.Range(0, deathSounds.Length)]);
     }
 }

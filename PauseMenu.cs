@@ -9,7 +9,9 @@ public class PauseMenu : MonoBehaviour
 
     [SerializeField] private GameObject pauseMenuUI = default;
     [SerializeField] private GameObject deathMenuUI = default;
+
     [SerializeField] private HeadBobController playerHeadBobScript = default;
+    [SerializeField] private EnvironmentManager environmentManagerScript = default;
 
     // Update is called once per frame
     void Update()
@@ -78,5 +80,14 @@ public class PauseMenu : MonoBehaviour
     {
         Debug.Log("Quitting game...");
         Application.Quit();
+    }
+
+    public void ToggleFog(bool newValue)
+    {
+        Debug.Log("Environment Fog " + newValue);
+        if (newValue)
+            environmentManagerScript.FogOn();
+        else
+            environmentManagerScript.FogOff();
     }
 }

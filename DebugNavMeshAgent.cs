@@ -6,18 +6,18 @@ using UnityEditor;
 
 public class DebugNavMeshAgent : MonoBehaviour
 {
-    private NavMeshAgent agent;
+    private NavMeshAgent agent = default;
 
-    [SerializeField] private Transform playerTransform;
+    [SerializeField] private Transform playerTransform = default;
 
     // keep unchecked in Unity Inspector when game isn't running
-    [Header("NavMeshAgent")]
-    [SerializeField] private bool velocity;
-    [SerializeField] private bool desiredVelocity;
-    [SerializeField] private bool path;
+    [SerializeField] private bool velocity = false;
+    [SerializeField] private bool desiredVelocity = false;
+    [SerializeField] private bool path = false;
+    [SerializeField] private bool pathDistance = false;
+    [SerializeField] private bool agentToPlayer = false;
+    [SerializeField] private bool agentForward = false;
 
-    [Header("Player")]
-    [SerializeField] private bool pathDistance;
     private Vector3 textOffset;
 
     // Start is called before the first frame update
@@ -25,7 +25,7 @@ public class DebugNavMeshAgent : MonoBehaviour
     {
         agent = GetComponent<NavMeshAgent>();
 
-        velocity = desiredVelocity = path = pathDistance = true;
+        velocity = desiredVelocity = path = pathDistance = agentToPlayer = agentForward = true;
 
         Handles.color = Color.black;
         textOffset = new Vector3(0.0f, 2.5f, 0.0f);
@@ -67,6 +67,18 @@ public class DebugNavMeshAgent : MonoBehaviour
                 Handles.Label(playerTransform.position + textOffset,
                 (playerTransform.position - agent.destination).magnitude.ToString("#.00"));
             }
+        }
+
+        if (agentToPlayer)
+        {
+            Gizmos.color = Color.cyan;
+            Gizmos.DrawLine(transform.position, playerTransform.position);
+        }
+
+        if (agentForward)
+        {
+            Gizmos.color = Color.magenta;
+            Gizmos.DrawLine(transform.position, transform.position + transform.forward * 50.0f);
         }
     }
 }

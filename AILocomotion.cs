@@ -34,12 +34,23 @@ public class AILocomotion : MonoBehaviour
     private float rangeFixMultiplier;
 
     [SerializeField] private float jumpSpeed;
-    [SerializeField] private float turnSpeed;
+    [SerializeField] private float animationTurnSpeed;
+    [SerializeField] private float attackTurnSpeed;
 
     private bool isStomping;
     private bool isJumping;
     private bool isAerial;
     private bool isTurning;
+
+    public MovementState state;
+
+    public enum MovementState
+    {
+        walking,
+        stomping,
+        jumping,
+        turning
+    }
 
     // Start is called before the first frame update
     void Start()
@@ -51,9 +62,11 @@ public class AILocomotion : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        FindRelativePosition();
+
         if (isStomping || isTurning)
         {
-            RotationControl();
+            RotateTowards();
             return;
         }
         else if (isAerial)
@@ -67,22 +80,18 @@ public class AILocomotion : MonoBehaviour
             return;
         }
 
-        FindRelativePosition();
-        RangeCorrection();
-
         // timer avoids recalculating destination every frame
         navigationTimer -= Time.deltaTime;
         if (navigationTimer < 0.0f)
         {
             FindDestination();
-
             navigationTimer = maxNavigationTime;
         }
 
+        RangeCorrection();
         MobilityControl();
         AttackControl();
-        TurnLeftOrRight();
-        RotationControl();
+        TurnControl();
     }
 
     private void RangeCorrection()
@@ -112,6 +121,7 @@ public class AILocomotion : MonoBehaviour
         {
             // Vector3 destination = playerTransform.position + playerToAgent.normalized * heavyStompRange;
             agent.SetDestination(player.transform.position);
+            state = MovementState.walking;
         }
     }
 
@@ -122,7 +132,7 @@ public class AILocomotion : MonoBehaviour
 
         if (InHeavyStompRange() || InLightStompRange() || InJumpRange() || InTurnRange())
         {
-            agent.ResetPath(); // prevent stopping distance overshoot while agent.autoBreaking true
+            agent.ResetPath(); // prevent stopping distance overshoot
             agent.isStopped = true;
         }
         else
@@ -137,6 +147,7 @@ public class AILocomotion : MonoBehaviour
         if (InHeavyStompRange())
         {
             isStomping = true;
+            state = MovementState.stomping;
             animator.SetBool("canHeavyStomp", true);
             return;
         }
@@ -145,6 +156,7 @@ public class AILocomotion : MonoBehaviour
         else if (InLightStompRange())
         {
             isStomping = true;
+            state = MovementState.stomping;
             animator.SetBool("canLightStomp", true);
             return;
         }
@@ -153,6 +165,7 @@ public class AILocomotion : MonoBehaviour
         else if (InJumpRange())
         {
             isJumping = true;
+            state = MovementState.jumping;
             animator.SetBool("canJump", true);
         }
     }
@@ -164,31 +177,29 @@ public class AILocomotion : MonoBehaviour
         transform.position = Vector3.MoveTowards(transform.position, player.transform.position, step);
     }
 
-    private void TurnLeftOrRight()
+    private void TurnControl()
     {
         // Play TURN animation if player > 90 degrees from agent line of sight
         if (Vector3.Angle(agentToPlayer, (transform.right + transform.forward * -1)) < 45.0f)
         {
             isTurning = true;
+            state = MovementState.turning;
             animator.SetBool("canRightTurn", true);
         }
         else if (Vector3.Angle(agentToPlayer, (transform.right * -1 + transform.forward * -1)) < 45.0f)
         {
             isTurning = true;
+            state = MovementState.turning;
             animator.SetBool("canLeftTurn", true);
         }
     }
 
-    private void RotationControl()
+    private void RotateTowards()
     {
-        // Rotate agent to face player after stomp attacks or during turn animations
-        if (InHeavyStompRange() || InLightStompRange() || isTurning)
-        {
-            var step = isTurning ? turnSpeed * Time.deltaTime * 2.0f : turnSpeed * Time.deltaTime;
-
-            Quaternion toRotation = Quaternion.LookRotation(agentToPlayer, Vector3.up);
-            transform.rotation = Quaternion.RotateTowards(transform.rotation, toRotation, step);
-        }
+        // Rotate enemy to face player during turn animation or stomp attack
+        float step = isTurning ? animationTurnSpeed * Time.deltaTime : attackTurnSpeed * Time.deltaTime;
+        Quaternion toRotation = Quaternion.LookRotation(agentToPlayer, Vector3.up);
+        transform.rotation = Quaternion.RotateTowards(transform.rotation, toRotation, step);
     }
 
     private bool InHeavyStompRange()
@@ -207,7 +218,7 @@ public class AILocomotion : MonoBehaviour
 
     private bool InJumpRange()
     {
-        return playerToAgent.sqrMagnitude < Mathf.Pow(jumpRange, 2);
+        return deg < attackFOV && playerToAgent.sqrMagnitude < Mathf.Pow(jumpRange, 2);
     }
 
     private bool InTurnRange()
@@ -215,10 +226,11 @@ public class AILocomotion : MonoBehaviour
         return Vector3.Angle(agentToPlayer, transform.forward * -1) < 90.0f;
     }
 
-    // This function is called when the behaviour becomes disabled.
+    // This function is called when the behaviour becomes disabled
     private void OnDisable()
     {
         Time.timeScale = 0.7f;
+        state = MovementState.walking;
         StartCoroutine(ResetAnimation());
     }
 
