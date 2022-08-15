@@ -5,12 +5,14 @@ using UnityEngine.AI;
 
 public class AILocomotion : MonoBehaviour
 {
-    private NavMeshAgent agent = null;
-    private Animator animator = null;
+    public MovementState state;
+
+    private NavMeshAgent agent;
+    private Animator animator;
 
     [Header("Player Reference")]
-    [SerializeField] private GameObject player = null;
-    [SerializeField] private Rigidbody playerRb = null;
+    [SerializeField] private GameObject player = default;
+    [SerializeField] private Rigidbody playerRb = default;
 
     internal Vector3 playerToAgent;
     internal Vector3 agentToPlayer;
@@ -22,27 +24,26 @@ public class AILocomotion : MonoBehaviour
     private float navigationTimer = 0.0f;
 
     [Header("Attacking")]
-    [SerializeField] private float heavyStompRange;
-    [SerializeField] private float lightStompRange;
-    [SerializeField] private float jumpRange;
+    [SerializeField] private float heavyStompRange = 55.0f;
+    [SerializeField] private float lightStompRange = 25.5f;
+    [SerializeField] private float jumpRange = 20.0f;
 
     [Header("Attacking Tweaks")]
-    [SerializeField, Range(0.0f, 10.0f)] private float rangeFix;
-    [SerializeField, Range(2.5f, 7.5f)] private float rangeError;
-    [SerializeField, Range(0.0f, 45.0f)] private float attackFOV;
+    [SerializeField, Range(0.0f, 10.0f)] private float rangeFix = 6.5f;
+    [SerializeField, Range(2.5f, 7.5f)] private float rangeError = 3.0f;
+    [SerializeField, Range(0.0f, 45.0f)] private float attackFOV = 20.0f;
 
     private float rangeFixMultiplier;
 
-    [SerializeField] private float jumpSpeed;
-    [SerializeField] private float animationTurnSpeed;
-    [SerializeField] private float attackTurnSpeed;
+    [SerializeField] private float jumpSpeed = 15.0f;
+    [SerializeField] private float animationTurnSpeed = 40.0f;
+    [SerializeField] private float heavyStompTurnSpeed = 10.0f;
+    [SerializeField] private float lightStompTurnSpeed = 50.0f;
 
     private bool isStomping;
     private bool isJumping;
     private bool isAerial;
     private bool isTurning;
-
-    public MovementState state;
 
     public enum MovementState
     {
@@ -74,11 +75,15 @@ public class AILocomotion : MonoBehaviour
             JumpTowards();
             return;
         }
-        // isAerial -> isJumping (conditional)
         else if (isJumping)
         {
             return;
         }
+
+        RangeCorrection();
+        MobilityControl();
+        AttackControl();
+        TurnControl();
 
         // timer avoids recalculating destination every frame
         navigationTimer -= Time.deltaTime;
@@ -87,22 +92,20 @@ public class AILocomotion : MonoBehaviour
             FindDestination();
             navigationTimer = maxNavigationTime;
         }
-
-        RangeCorrection();
-        MobilityControl();
-        AttackControl();
-        TurnControl();
     }
 
     private void RangeCorrection()
     {
-        // If player is moving away, agent will attack more forward (path prediction)
+        // If player is moving away then agent will attack more forward (path prediction)
         if (playerRb.velocity == Vector3.zero)
         {
             rangeFixMultiplier = 0.0f;
             return;
         }
         rangeFixMultiplier = (180.0f - Vector3.Angle(playerRb.velocity, transform.forward)) / 180.0f;
+
+        if (playerRb.velocity.sqrMagnitude > Mathf.Pow(6.0f, 2.0f) && rangeFixMultiplier > 0.975f)
+            rangeFixMultiplier = 2.0f;
     }
 
     private void FindRelativePosition()
@@ -136,9 +139,7 @@ public class AILocomotion : MonoBehaviour
             agent.isStopped = true;
         }
         else
-        {
             agent.isStopped = false;
-        }
     }
 
     private void AttackControl()
@@ -197,7 +198,15 @@ public class AILocomotion : MonoBehaviour
     private void RotateTowards()
     {
         // Rotate enemy to face player during turn animation or stomp attack
-        float step = isTurning ? animationTurnSpeed * Time.deltaTime : attackTurnSpeed * Time.deltaTime;
+        float step = 0.0f;
+
+        if (animator.GetBool("canHeavyStomp"))
+            step = heavyStompTurnSpeed * Time.deltaTime;
+        else if (animator.GetBool("canLightStomp"))
+            step = lightStompTurnSpeed * Time.deltaTime;
+        else if (isTurning)
+            step = animationTurnSpeed * Time.deltaTime;
+
         Quaternion toRotation = Quaternion.LookRotation(agentToPlayer, Vector3.up);
         transform.rotation = Quaternion.RotateTowards(transform.rotation, toRotation, step);
     }
@@ -205,20 +214,20 @@ public class AILocomotion : MonoBehaviour
     private bool InHeavyStompRange()
     {
         return deg < attackFOV
-            && playerToAgent.sqrMagnitude < Mathf.Pow(heavyStompRange + rangeError - rangeFix * rangeFixMultiplier, 2)
-            && playerToAgent.sqrMagnitude > Mathf.Pow(heavyStompRange - rangeError - rangeFix * rangeFixMultiplier, 2);
+            && playerToAgent.sqrMagnitude < Mathf.Pow(heavyStompRange + rangeError - rangeFix * rangeFixMultiplier, 2.0f)
+            && playerToAgent.sqrMagnitude > Mathf.Pow(heavyStompRange - rangeError - rangeFix * rangeFixMultiplier, 2.0f);
     }
 
     private bool InLightStompRange()
     {
         return deg < attackFOV
-            && playerToAgent.sqrMagnitude < Mathf.Pow(lightStompRange + rangeError - rangeFix * rangeFixMultiplier, 2)
-            && playerToAgent.sqrMagnitude > Mathf.Pow(lightStompRange - rangeError - rangeFix * rangeFixMultiplier, 2);
+            && playerToAgent.sqrMagnitude < Mathf.Pow(lightStompRange + rangeError - rangeFix * rangeFixMultiplier, 2.0f)
+            && playerToAgent.sqrMagnitude > Mathf.Pow(lightStompRange - rangeError - rangeFix * rangeFixMultiplier, 2.0f);
     }
 
     private bool InJumpRange()
     {
-        return deg < attackFOV && playerToAgent.sqrMagnitude < Mathf.Pow(jumpRange, 2);
+        return deg < attackFOV && playerToAgent.sqrMagnitude < Mathf.Pow(jumpRange, 2.0f);
     }
 
     private bool InTurnRange()

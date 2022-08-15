@@ -43,11 +43,15 @@ public class PlayerCollision : MonoBehaviour
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
 
-            playerAudioScript.PlayDeathSound();
+            if (playerAudioScript.enabled)
+            {
+                playerAudioScript.PlayDeathSound();
+                playerAudioScript.enabled = false;
+            }
+
             aiAudioScript.Invoke("PlayKillSpeech", 1.5f);
 
             playerMovementScript.enabled = false;
-            playerAudioScript.enabled = false;
             aiLocomotionScript.enabled = false;
 
             transform.localScale = new Vector3(transform.localScale.x, flattenYScale, transform.localScale.z);

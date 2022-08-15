@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
 public class PauseMenu : MonoBehaviour
@@ -10,8 +11,15 @@ public class PauseMenu : MonoBehaviour
     [SerializeField] private GameObject pauseMenuUI = default;
     [SerializeField] private GameObject deathMenuUI = default;
 
+    [SerializeField] private Toggle fogToggle = default;
+
     [SerializeField] private HeadBobController playerHeadBobScript = default;
     [SerializeField] private EnvironmentManager environmentManagerScript = default;
+
+    void Start()
+    {
+        fogToggle.isOn = EnvironmentManager.useFog;
+    }
 
     // Update is called once per frame
     void Update()
@@ -82,10 +90,10 @@ public class PauseMenu : MonoBehaviour
         Application.Quit();
     }
 
-    public void ToggleFog(bool newValue)
+    public void ToggleFog(bool useFog)
     {
-        Debug.Log("Environment Fog " + newValue);
-        if (newValue)
+        Debug.Log("Environment Fog " + useFog);
+        if (useFog)
             environmentManagerScript.FogOn();
         else
             environmentManagerScript.FogOff();

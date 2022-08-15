@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class EnvironmentManager : MonoBehaviour
 {
+    public static bool useFog;
+
     [Header("Environment Influences")]
     [SerializeField] private Camera cam = default;
     [SerializeField] private Light sun = default;
@@ -11,11 +13,13 @@ public class EnvironmentManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        FogOn();
+        if (useFog) FogOn();
     }
 
     public void FogOn()
     {
+        useFog = true;
+
         RenderSettings.fog = true;
         RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
 
@@ -27,6 +31,8 @@ public class EnvironmentManager : MonoBehaviour
 
     public void FogOff()
     {
+        useFog = false;
+
         RenderSettings.fog = false;
         RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Skybox;
 
