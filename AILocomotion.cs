@@ -7,6 +7,7 @@ public class AILocomotion : MonoBehaviour
 {
     public MovementState state;
 
+    private PlayerMovement pms;
     private NavMeshAgent agent;
     private Animator animator;
 
@@ -30,7 +31,8 @@ public class AILocomotion : MonoBehaviour
 
     [Header("Attacking Tweaks")]
     [SerializeField, Range(0.0f, 10.0f)] private float rangeFix = 6.5f;
-    [SerializeField, Range(2.5f, 7.5f)] private float rangeError = 3.0f;
+    [SerializeField, Range(0.0f, 1.0f)] private float multThreshold = 0.975f;
+    [SerializeField, Range(0.0f, 7.5f)] private float rangeError = 3.0f;
     [SerializeField, Range(0.0f, 45.0f)] private float attackFOV = 20.0f;
 
     private float rangeFixMultiplier;
@@ -56,6 +58,7 @@ public class AILocomotion : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        pms = player.GetComponent<PlayerMovement>();
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
     }
@@ -104,8 +107,16 @@ public class AILocomotion : MonoBehaviour
         }
         rangeFixMultiplier = (180.0f - Vector3.Angle(playerRb.velocity, transform.forward)) / 180.0f;
 
-        if (playerRb.velocity.sqrMagnitude > Mathf.Pow(6.0f, 2.0f) && rangeFixMultiplier > 0.975f)
-            rangeFixMultiplier = 2.0f;
+        if (playerRb.velocity.sqrMagnitude > Mathf.Pow(pms.sprintSpeed - 0.5f, 2.0f) && rangeFixMultiplier > multThreshold)
+        {
+            // Debug.Log("*=2.0f");
+            rangeFixMultiplier *= 2.0f;
+        }
+        else if (playerRb.velocity.sqrMagnitude > Mathf.Pow(pms.walkSpeed + 0.5f, 2.0f) && rangeFixMultiplier > multThreshold)
+        {
+            // Debug.Log("*=1.5f");
+            rangeFixMultiplier *= 1.5f;
+        }
     }
 
     private void FindRelativePosition()

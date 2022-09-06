@@ -14,10 +14,10 @@ public class PlayerMovement : MonoBehaviour
     public MovementState state;
 
     [Header("Movement")]
-    [SerializeField] private float walkSpeed;
-    [SerializeField] private float sprintSpeed;
     [SerializeField] private float groundDrag;
-    private float moveSpeed;
+    [SerializeField] private float moveSpeed;
+    public float walkSpeed;
+    public float sprintSpeed;
 
     [Header("Jumping")]
     [SerializeField] private float jumpForce;
@@ -129,6 +129,9 @@ public class PlayerMovement : MonoBehaviour
         {
             state = MovementState.sprinting;
             moveSpeed = sprintSpeed;
+
+            if (Input.GetKey(KeyCode.S))
+                moveSpeed = (walkSpeed + sprintSpeed) / 2.0f;
         }
 
         // Mode - Walking

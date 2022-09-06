@@ -18,6 +18,7 @@ public class PauseMenu : MonoBehaviour
 
     void Start()
     {
+        Time.timeScale = 1.0f;
         fogToggle.isOn = EnvironmentManager.useFog;
     }
 
@@ -73,14 +74,12 @@ public class PauseMenu : MonoBehaviour
     public void RestartLevel()
     {
         Debug.Log("Restarting level...");
-        Time.timeScale = 1.0f;
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
     public void LoadMainMenu()
     {
         Debug.Log("Loading menu...");
-        // Time.timeScale = 1.0f;
         // SceneManager.LoadScene();
     }
 
